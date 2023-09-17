@@ -39,12 +39,12 @@ The Task Manager CLI is a simple command-line application that allows you to man
 2. Navigate to the project directory:
 
      ```bash
-   cd your-task-manager-cli
+   cd go-task-manager-cli
     ```
 3. Run the application:
 
     ```bash
-   go run main.go
+   go run *.go
     ```
 ## File Persistence
 
