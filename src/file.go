@@ -1,4 +1,4 @@
-package main
+package op
 
 import (
 	"encoding/csv"
@@ -20,6 +20,7 @@ func (tm *TaskManager) LoadTasksFromFile(filename string) error {
     if err != nil {
         return err
     }
+    tm.ClearTasks()
 
     for _, line := range lines {
         if len(line) != 5 {
@@ -31,11 +32,14 @@ func (tm *TaskManager) LoadTasksFromFile(filename string) error {
             return err
         }
 
+        if tm.taskExists(id) {
+            continue
+        }
+
         dueDate, err := time.Parse("2006-01-02", line[3])
         if err != nil {
             return err
         }
-
 
         task := Task{
             ID:          id,
@@ -44,6 +48,7 @@ func (tm *TaskManager) LoadTasksFromFile(filename string) error {
             DueDate:     dueDate,
             Completed:   line[4] == "true",
         }
+
         tm.tasks = append(tm.tasks, task)
         if id > tm.lastID {
             tm.lastID = id
@@ -52,6 +57,16 @@ func (tm *TaskManager) LoadTasksFromFile(filename string) error {
 
     return nil
 }
+
+func (tm *TaskManager) taskExists(id int) bool {
+    for _, t := range tm.tasks {
+        if t.ID == id {
+            return true
+        }
+    }
+    return false
+}
+
 
 func (tm *TaskManager) SaveTasksToFile(filename string) error {
     file, err := os.Create(filename)

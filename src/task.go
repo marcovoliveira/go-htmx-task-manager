@@ -1,4 +1,4 @@
-package main
+package op
 
 import (
 	"fmt"
@@ -20,6 +20,14 @@ type Task struct {
 
 func NewTaskManager() *TaskManager {
 	return &TaskManager{}
+}
+
+func (tm *TaskManager) GetTasks() []Task {
+	return tm.tasks
+}
+
+func (tm *TaskManager) ClearTasks() {
+	tm.tasks = []Task{}
 }
 
 func (tm *TaskManager) 	AddTask(title, description string, dueDate time.Time) {

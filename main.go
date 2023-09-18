@@ -1,80 +1,52 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	utils "go-task-manager-cli/utils"
-	"os"
-	"strconv"
-	"strings"
+	op "go-task-manager-cli/src"
+	"html/template"
+	"log"
+	"net/http"
+	"time"
 )
 
-func main() {
-	tm := NewTaskManager()
+const Port = ":8000"
 
+func main() {
+	fmt.Printf("Server running on port http://localhost%s...", Port)
+	tm := op.NewTaskManager()
 	err := tm.LoadTasksFromFile("tasks.csv")
+
     if err != nil {
         fmt.Println("Error loading tasks:", err)
     }
 
-
-	reader := bufio.NewReader(os.Stdin)
-
-
-	for {
-		fmt.Println("Task Manager")
-		fmt.Println("1. Add Task")
-		fmt.Println("2. List Tasks")
-		fmt.Println("3. Mark Task as Completed")
-		fmt.Println("4. Exit")
-		fmt.Print("Enter your choice: ")
-
-		choice, _ := reader.ReadString('\n')
-		choice = strings.TrimSpace(choice)
-
-		switch choice {
-		case "1":
-			fmt.Print("Enter task title: ")
-			title, _ := reader.ReadString('\n')
-			title = strings.TrimSpace(title)
-			fmt.Print("Enter task description: ")
-			description, _ := reader.ReadString('\n')
-			description = strings.TrimSpace(description)
-			fmt.Print("Enter due date (YYYY-MM-DD): ")
-			dateStr, _ := reader.ReadString('\n')
-			dateStr = strings.TrimSpace(dateStr)
-
-			dueDate, err := utils.ParseDate(dateStr)
-			if err != nil {
-				fmt.Println("Invalid date format. Please use YYYY-MM-DD.")
-				continue
-			}
-			
-			tm.AddTask(title, description, dueDate)
-		case "2":
-			tm.ListTasks()
-		case "3":
-			fmt.Print("Enter task ID to mark as completed: ")
-			idStr, _ := reader.ReadString('\n')
-			idStr = strings.TrimSpace(idStr)
-
-			taskID, err := strconv.Atoi(idStr)
-			if err != nil {
-				fmt.Println("Invalid task ID. Please enter a valid number.")
-				continue
-			}
-
-			err = tm.MarkTaskCompleted(taskID)
-			if err != nil {
-				fmt.Println("Task not found.")
-			} else {
-				fmt.Println("Task marked as completed.")
-			}
-		case "4":
-			fmt.Println("Goodbye!")
-			return
-		default:
-			fmt.Println("Invalid choice. Please try again.")
+	generateIndex := func(w http.ResponseWriter, r *http.Request) {
+		err := tm.LoadTasksFromFile("tasks.csv")
+		if err != nil {
+			fmt.Println("Error loading tasks:", err)
 		}
+		tmpl := template.Must(template.ParseFiles("layouts/index.html"))
+		tasks := map[string][]op.Task{
+			"Tasks": tm.GetTasks(),
+		}		
+		tmpl.Execute(w, tasks)
 	}
+
+	saveTask := func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(1 * time.Second)
+		title := r.PostFormValue("title")
+		description := r.PostFormValue("description")
+		tmpl := template.Must(template.ParseFiles("layouts/index.html"))
+		dueDate, _ := time.Parse("2006-01-02", time.Now().Format("2006-01-02"))
+		tm.AddTask(title, description, dueDate)
+		tasks := map[string][]op.Task{
+			"Tasks": tm.GetTasks(),
+		}		
+		tmpl.Execute(w, tasks)
+		//tmpl.ExecuteTemplate(w, "task-list-element", Task{Title: title, Description: description})
+	}
+
+	http.HandleFunc("/", generateIndex)
+	http.HandleFunc("/add-task/", saveTask)
+	log.Fatal(http.ListenAndServe(Port, nil))
 }
