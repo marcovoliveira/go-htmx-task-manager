@@ -76,3 +76,18 @@ func (tm *TaskManager) MarkTaskCompleted(id int) error {
 	
 	return fmt.Errorf("task not found")
 }
+
+func (tm *TaskManager) DeleteTask(id int) error {
+	for i, task := range tm.tasks {
+		if task.ID == id {
+			tm.tasks = append(tm.tasks[:i], tm.tasks[i+1:]...)
+			err := tm.SaveTasksToFile("tasks.csv")
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("task not found")
+}
