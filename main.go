@@ -11,17 +11,24 @@ import (
 
 const Port = ":8000"
 
+
+
 func main() {
 	fmt.Printf("Server running on port http://localhost%s...", Port)
 	tm := op.NewTaskManager()
-	err := tm.LoadTasksFromFile("tasks.csv")
+	//err := tm.LoadTasksFromFile("tasks.csv")
+	db, err := tm.OpenDatabase("tasks.db")
+	tm.LoadTasksFromDatabase(db)
 
     if err != nil {
         fmt.Println("Error loading tasks:", err)
     }
 
 	generateIndex := func(w http.ResponseWriter, r *http.Request) {
-		err := tm.LoadTasksFromFile("tasks.csv")
+		//err := tm.LoadTasksFromFile("tasks.csv")
+		db, err := tm.OpenDatabase("tasks.db")
+		tm.LoadTasksFromDatabase(db)
+		
 		if err != nil {
 			fmt.Println("Error loading tasks:", err)
 		}
