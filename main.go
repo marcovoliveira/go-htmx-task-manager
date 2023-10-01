@@ -17,7 +17,7 @@ func main() {
 	fmt.Printf("Server running on port http://localhost%s...", Port)
 	tm := op.NewTaskManager()
 	//err := tm.LoadTasksFromFile("tasks.csv")
-	db, err := tm.OpenDatabase("tasks.db")
+	db, err := tm.OpenDatabase()
 	tm.LoadTasksFromDatabase(db)
 
     if err != nil {
@@ -26,7 +26,7 @@ func main() {
 
 	generateIndex := func(w http.ResponseWriter, r *http.Request) {
 		//err := tm.LoadTasksFromFile("tasks.csv")
-		db, err := tm.OpenDatabase("tasks.db")
+		db, err := tm.OpenDatabase()
 		tm.LoadTasksFromDatabase(db)
 		
 		if err != nil {

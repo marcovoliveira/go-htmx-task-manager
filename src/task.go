@@ -30,17 +30,7 @@ func (tm *TaskManager) ClearTasks() {
 	tm.tasks = []Task{}
 }
 
-
-func (tm *TaskManager) PersistTasks() error {
-	db, err := tm.OpenDatabase("tasks.db")
-	if err != nil {
-		return err
-	}
-	return tm.SaveTasksToDatabase(db)
-	//return tm.SaveTasksToFile("tasks.csv")
-}
-
-func (tm *TaskManager) 	AddTask(title, description string, dueDate time.Time) {
+func (tm *TaskManager) AddTask(title, description string, dueDate time.Time) error {
 	tm.lastID++
 	task := Task{
 		ID:          tm.lastID,
@@ -50,10 +40,14 @@ func (tm *TaskManager) 	AddTask(title, description string, dueDate time.Time) {
 		Completed:   false,
 	}
 	tm.tasks = append(tm.tasks, task)
-	err := tm.PersistTasks()
+	db, err := tm.OpenDatabase()
+	err = tm.InsertTaskDB(db, task)
+	defer db.Close()
 	if err != nil {
 		fmt.Println("Error saving tasks:", err)
+		return err
 	}
+	return nil
 }
 
 func (tm *TaskManager) ListTasks() {
@@ -76,7 +70,9 @@ func (tm *TaskManager) MarkTaskCompleted(id int) error {
 	for i, task := range tm.tasks {
 		if task.ID == id {
 			tm.tasks[i].Completed = true
-			err := tm.PersistTasks()
+			db, err := tm.OpenDatabase()
+			err = tm.UpdateTaskDB(db, task)
+			defer db.Close()
             if err != nil {
                 return err
             }
@@ -91,8 +87,11 @@ func (tm *TaskManager) DeleteTask(id int) error {
 	for i, task := range tm.tasks {
 		if task.ID == id {
 			tm.tasks = append(tm.tasks[:i], tm.tasks[i+1:]...)
-			err := tm.PersistTasks()
+			db, err := tm.OpenDatabase()
+			err = tm.DeleteTaskDB(db, task.ID)
+			defer db.Close()
 			if err != nil {
+				fmt.Println("Error saving tasks:", err)
 				return err
 			}
 			return nil

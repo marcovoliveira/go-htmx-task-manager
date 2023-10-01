@@ -6,16 +6,15 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func (tm *TaskManager) OpenDatabase(dbPath string) (*sql.DB, error) {
-    db, err := sql.Open("sqlite3", dbPath)
+func (tm *TaskManager) OpenDatabase() (*sql.DB, error) {
+    db, err := sql.Open("sqlite3", "tasks.db")
     if err != nil {
         return nil, err
     }
     return db, nil
 }
 
-
-func (tm *TaskManager) SaveTasksToDatabase(db *sql.DB) error {
+func (tm *TaskManager) InsertTaskDB(db *sql.DB, task Task) error {
     insertStatement := `
         INSERT INTO tasks (id, title, description, due_date, completed)
         VALUES (?, ?, ?, ?, ?)
@@ -25,14 +24,20 @@ func (tm *TaskManager) SaveTasksToDatabase(db *sql.DB) error {
         return err
     }
     defer insertStmt.Close()
-
-    for _, task := range tm.tasks {
-        _, err := insertStmt.Exec(task.ID, task.Title, task.Description, task.DueDate, task.Completed)
-        if err != nil {
-            return err
-        }
+ 
+    _, err = insertStmt.Exec(task.ID, task.Title, task.Description, task.DueDate, task.Completed)
+    if err != nil {
+        return err
     }
 
+    return nil
+}
+
+func (tm *TaskManager) UpdateTaskDB(db *sql.DB, task Task) error {
+    return nil
+}
+
+func (tm *TaskManager) DeleteTaskDB(db *sql.DB, id int) error {
     return nil
 }
 
