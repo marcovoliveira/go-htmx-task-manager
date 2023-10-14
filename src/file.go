@@ -7,62 +7,77 @@ import (
 )
 
 func (tm *TaskManager) OpenDatabase() (*sql.DB, error) {
-    db, err := sql.Open("sqlite3", "tasks.db")
-    if err != nil {
-        return nil, err
-    }
-    return db, nil
+	db, err := sql.Open("sqlite3", "tasks.db")
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func (tm *TaskManager) InsertTaskDB(db *sql.DB, task Task) error {
-    insertStatement := `
+	insertStatement := `
         INSERT INTO tasks (id, title, description, due_date, completed)
         VALUES (?, ?, ?, ?, ?)
     `
-    insertStmt, err := db.Prepare(insertStatement)
-    if err != nil {
-        return err
-    }
-    defer insertStmt.Close()
- 
-    _, err = insertStmt.Exec(task.ID, task.Title, task.Description, task.DueDate, task.Completed)
-    if err != nil {
-        return err
-    }
+	insertStmt, err := db.Prepare(insertStatement)
+	if err != nil {
+		return err
+	}
+	defer insertStmt.Close()
 
-    return nil
+	_, err = insertStmt.Exec(task.ID, task.Title, task.Description, task.DueDate, task.Completed)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (tm *TaskManager) UpdateTaskDB(db *sql.DB, task Task) error {
-    return nil
+	return nil
 }
 
 func (tm *TaskManager) DeleteTaskDB(db *sql.DB, id int) error {
-    return nil
+	deleteStatement := `
+        DELETE FROM tasks
+        WHERE id = ?
+    `
+	deleteStmt, err := db.Prepare(deleteStatement)
+	if err != nil {
+		return err
+	}
+	defer deleteStmt.Close()
+
+	_, err = deleteStmt.Exec(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (tm *TaskManager) LoadTasksFromDatabase(db *sql.DB) error {
-    rows, err := db.Query("SELECT id, title, description, due_date, completed FROM tasks")
-    if err != nil {
-        return err
-    }
-    defer rows.Close()
+	rows, err := db.Query("SELECT id, title, description, due_date, completed FROM tasks")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
 
-    tm.ClearTasks()
+	tm.ClearTasks()
 
-    for rows.Next() {
-        var task Task
-        err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.DueDate, &task.Completed)
-        if err != nil {
-            return err
-        }
-        tm.tasks = append(tm.tasks, task)
-        if task.ID > tm.lastID {
-            tm.lastID = task.ID
-        }
-    }
+	for rows.Next() {
+		var task Task
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.DueDate, &task.Completed)
+		if err != nil {
+			return err
+		}
+		tm.tasks = append(tm.tasks, task)
+		if task.ID > tm.lastID {
+			tm.lastID = task.ID
+		}
+	}
 
-    return nil
+	return nil
 }
 
 // func (tm *TaskManager) LoadTasksFromFile(filename string) error {
@@ -116,14 +131,13 @@ func (tm *TaskManager) LoadTasksFromDatabase(db *sql.DB) error {
 // }
 
 func (tm *TaskManager) taskExists(id int) bool {
-    for _, t := range tm.tasks {
-        if t.ID == id {
-            return true
-        }
-    }
-    return false
+	for _, t := range tm.tasks {
+		if t.ID == id {
+			return true
+		}
+	}
+	return false
 }
-
 
 // func (tm *TaskManager) SaveTasksToFile(filename string) error {
 //     file, err := os.Create(filename)

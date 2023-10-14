@@ -6,7 +6,7 @@ import (
 )
 
 type TaskManager struct {
-	tasks []Task
+	tasks  []Task
 	lastID int
 }
 
@@ -73,13 +73,13 @@ func (tm *TaskManager) MarkTaskCompleted(id int) error {
 			db, err := tm.OpenDatabase()
 			err = tm.UpdateTaskDB(db, task)
 			defer db.Close()
-            if err != nil {
-                return err
-            }
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("task not found")
 }
 
@@ -97,7 +97,6 @@ func (tm *TaskManager) DeleteTask(id int) error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("task not found")
 }
-
